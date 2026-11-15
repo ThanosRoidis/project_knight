@@ -1,14 +1,16 @@
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(Actor))]
 public class MovementController : MonoBehaviour
 {
     [Header("Controller")]
-    public float moveSpeed = 5;
-    public float gravity = -9.8f;
-    public float jumpHeight = 1.2f;
+    [SerializeField] private float moveSpeed = 5;
+    [SerializeField] private float gravity = -9.8f;
+    [SerializeField] private float jumpHeight = 1.2f;
 
     private CharacterController controller;
+    private Actor actor;
     private Vector3 playerVelocity;
     private Vector3 movementInput;
     private bool jumpRequested;
@@ -18,6 +20,7 @@ public class MovementController : MonoBehaviour
     void Awake()
     {
         controller = GetComponent<CharacterController>();
+        actor = GetComponent<Actor>();
     }
 
     public void SetMovementInput(Vector2 input)
@@ -25,11 +28,6 @@ public class MovementController : MonoBehaviour
         movementInput.x = input.x;
         movementInput.y = 0f;
         movementInput.z = input.y;
-    }
-
-    public void SetMovementInput(Vector3 input)
-    {
-        movementInput = new Vector3(input.x, 0f, input.z);
     }
 
     public void RequestJump()
@@ -55,5 +53,7 @@ public class MovementController : MonoBehaviour
 
         playerVelocity.y += gravity * deltaTime;
         controller.Move(playerVelocity * deltaTime);
+
+        actor.UpdateLocomotionAnimation(IsMoving);
     }
 }

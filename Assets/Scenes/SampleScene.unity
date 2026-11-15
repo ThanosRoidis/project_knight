@@ -340,6 +340,7 @@ GameObject:
   m_Component:
   - component: {fileID: 320740647}
   - component: {fileID: 320740646}
+  - component: {fileID: 320740648}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -362,6 +363,10 @@ MonoBehaviour:
   maxHealth: 3
   hitSound: {fileID: 0}
   hitEffect: {fileID: 0}
+  lookDirection: {fileID: 0}
+  minLookPitch: -80
+  maxLookPitch: 80
+  blendDuration: 0.2
 --- !u!4 &320740647
 Transform:
   m_ObjectHideFlags: 0
@@ -379,6 +384,28 @@ Transform:
   - {fileID: 1737011109}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &320740648
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 320740645}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -551,6 +578,10 @@ MonoBehaviour:
   maxHealth: 3
   hitSound: {fileID: 0}
   hitEffect: {fileID: 0}
+  lookDirection: {fileID: 0}
+  minLookPitch: -80
+  maxLookPitch: 80
+  blendDuration: 0.2
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -728,6 +759,10 @@ MonoBehaviour:
   maxHealth: 3
   hitSound: {fileID: 0}
   hitEffect: {fileID: 0}
+  lookDirection: {fileID: 0}
+  minLookPitch: -80
+  maxLookPitch: 80
+  blendDuration: 0.2
 --- !u!1001 &766754406
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -959,6 +994,7 @@ GameObject:
   m_Component:
   - component: {fileID: 948703798}
   - component: {fileID: 948703799}
+  - component: {fileID: 948703804}
   - component: {fileID: 948703803}
   - component: {fileID: 948703802}
   - component: {fileID: 948703797}
@@ -1024,10 +1060,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1eab3abf16363f943b45e4bbb81da731, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  lookDirection: {fileID: 184752774}
-  cam: {fileID: 330585545}
-  sensitivity: 15
-  blendDuration: 0.1
+  lookSensitivity: 10
 --- !u!95 &948703800
 Animator:
   serializedVersion: 7
@@ -1167,7 +1200,6 @@ MonoBehaviour:
   attackLayer:
     serializedVersion: 2
     m_Bits: 64
-  blendDuration: 0.1
   attackOrigin: {fileID: 0}
   attackDirection: {fileID: 0}
   swordSwing: {fileID: 0}
@@ -1186,6 +1218,25 @@ MonoBehaviour:
   moveSpeed: 5
   gravity: -9.8
   jumpHeight: 1.2
+--- !u!114 &948703804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 948703796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbee661e3b420994bb9901ba6026b4c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Actor
+  maxHealth: 4
+  hitSound: {fileID: 0}
+  hitEffect: {fileID: 0}
+  lookDirection: {fileID: 184752774}
+  minLookPitch: -80
+  maxLookPitch: 80
+  blendDuration: 0.2
 --- !u!4 &949595672 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 463978, guid: 9f4313a771e05c64d8da7ae6bd19a19f, type: 3}

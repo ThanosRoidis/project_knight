@@ -1,28 +1,28 @@
 using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
-[RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(Actor))]
 public class CombatController : MonoBehaviour
 {
     [Header("Attacking")]
-    public float attackDistance = 2f;
-    public float attackDuration = 0.5833333f;
-    public int attackDamage = 1;
-    public float attackDamageDelay = 0.2f;
-    public float attackResetDelay = 0.1f;
-    public LayerMask attackLayer;
-    public float blendDuration = 0.1f;
+    [SerializeField] private float attackDistance = 2f;
+    [SerializeField] private float attackDuration = 0.5833333f;
+    [SerializeField] private int attackDamage = 1;
+    [SerializeField] private float attackDamageDelay = 0.2f;
+    [SerializeField] private float attackResetDelay = 0.1f;
+    [SerializeField] private LayerMask attackLayer;
 
-    public Transform attackOrigin;
-    public Transform attackDirection;
-    public AudioClip swordSwing;
+    [Header("References")]
+    [SerializeField] private Transform attackOrigin;
+    [SerializeField] private Transform attackDirection;
+    [SerializeField] private AudioClip swordSwing;
 
     public bool IsAttacking => attacking;
 
-    public const string ATTACK1 = "ATTACK_1";
-    public const string ATTACK2 = "ATTACK_2";
+    private const string ATTACK1 = "ATTACK_1";
+    private const string ATTACK2 = "ATTACK_2";
 
-    private Animator animator;
+    private Actor actor;
     private AudioSource audioSource;
 
     private bool attacking = false;
@@ -31,20 +31,20 @@ public class CombatController : MonoBehaviour
 
     private float attackResetTimer = 0.1f;
 
-    private string currentAnimationState;
-
     void Awake()
     {
-        animator = GetComponent<Animator>();
+        actor = GetComponent<Actor>();
         audioSource = GetComponent<AudioSource>();
 
         if (attackOrigin == null) {
-            attackOrigin = transform;
+            attackOrigin = actor.LookDirection;
         }
 
         if (attackDirection == null) {
-            attackDirection = transform;
+            attackDirection = actor.LookDirection;
         }
+        attackOrigin = actor.LookDirection;
+        attackDirection = actor.LookDirection;
     }
 
     public void TickCombat(float deltaTime)
@@ -62,6 +62,7 @@ public class CombatController : MonoBehaviour
 
         readyToAttack = false;
         attacking = true;
+        actor.SetAttacking(true);
 
         Invoke(nameof(ResetAttack), attackDuration);
         Invoke(nameof(AttackRaycast), attackDamageDelay);
@@ -72,10 +73,10 @@ public class CombatController : MonoBehaviour
         }
 
         if (attackCount == 0) {
-            ChangeAnimationState(ATTACK1);
+            actor.PlayAttackAnimation(ATTACK1);
             attackCount = 1;
         } else {
-            ChangeAnimationState(ATTACK2);
+            actor.PlayAttackAnimation(ATTACK2);
             attackCount = 0;
         }
 
@@ -87,7 +88,7 @@ public class CombatController : MonoBehaviour
         attacking = false;
         readyToAttack = true;
         attackResetTimer = attackResetDelay;
-        currentAnimationState = string.Empty;
+        actor.SetAttacking(false);
     }
 
     void AttackRaycast()
@@ -98,13 +99,5 @@ public class CombatController : MonoBehaviour
                 enemyActor.GetHit(hit.point, attackDamage);
             }
         }
-    }
-
-    void ChangeAnimationState(string newState)
-    {
-        if (currentAnimationState == newState) return;
-
-        currentAnimationState = newState;
-        animator.CrossFadeInFixedTime(currentAnimationState, blendDuration, 0);
     }
 }
