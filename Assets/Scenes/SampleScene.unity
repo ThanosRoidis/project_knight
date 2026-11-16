@@ -1215,7 +1215,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87fe55d4d88253849b0bfd27c9bc9ce2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovementController
-  moveSpeed: 5
+  forwardMovementParams:
+    speed: 3.5
+    acceleration: 18
+    deceleration: 22
+  backwardMovementParams:
+    speed: 1.5
+    acceleration: 16
+    deceleration: 20
+  strafeMovementParams:
+    speed: 2.5
+    acceleration: 17
+    deceleration: 21
+  attackingMovementParams:
+    speed: 1
+    acceleration: 12
+    deceleration: 16
   gravity: -9.8
   jumpHeight: 1.2
 --- !u!114 &948703804
