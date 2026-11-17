@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 [RequireComponent(typeof(Animator))]
 public class Actor : MonoBehaviour
@@ -7,6 +8,10 @@ public class Actor : MonoBehaviour
     [SerializeField] private int maxHealth;
     [SerializeField] private AudioClip hitSound;
     [SerializeField] private GameObject hitEffect;
+
+    [Header("Body")]
+    [SerializeField] private float height = 2f;
+    [SerializeField] private bool updateCenter = true;
 
     [Header("Look")]
     [SerializeField] private Transform lookDirection;
@@ -30,11 +35,44 @@ public class Actor : MonoBehaviour
 
     public Transform LookDirection => lookDirection != null ? lookDirection : transform;
 
+    public float Height
+    {
+        get => height;
+        set {
+            height = Mathf.Max(0.01f, value);
+            ApplyHeight();
+        }
+    }
+
+    void OnValidate()
+    {
+        height = Mathf.Max(0.01f, height);
+        ApplyHeight();
+    }
+
+    private void ApplyHeight()
+    {
+        if (TryGetComponent(out CharacterController characterController)) {
+            characterController.height = height;
+
+            if (updateCenter) {
+                Vector3 center = characterController.center;
+                center.y = height * 0.5f;
+                characterController.center = center;
+            }
+        }
+
+        if (TryGetComponent(out NavMeshAgent navMeshAgent)) {
+            navMeshAgent.height = height;
+        }
+    }
+
     void Awake()
     {
         currentHealth = maxHealth;
         audioSource = GetComponent<AudioSource>();
         animator = GetComponent<Animator>();
+        ApplyHeight();
 
         if (lookDirection == null) {
             lookDirection = transform;
