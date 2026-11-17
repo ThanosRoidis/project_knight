@@ -166,7 +166,10 @@ public class AIController : MonoBehaviour
 
         RotateTowards(toPlayer);
 
-        if (Time.time - lastAttackTime >= attackDelay && combatController.Attack()) {
+        Vector3 attackTargetPoint = player.position + Vector3.up * targetHeight;
+        CombatController.AttackContext attackContext = combatController.BuildAttackContextFromAimPoint(attackTargetPoint);
+
+        if (Time.time - lastAttackTime >= attackDelay && combatController.Attack(attackContext)) {
             lastAttackTime = Time.time;
         }
     }

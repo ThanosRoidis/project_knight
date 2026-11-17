@@ -6,6 +6,12 @@ public class PlayerController : MonoBehaviour
     [Header("Look")]
     [SerializeField] private float lookSensitivity = 15f;
 
+    [Header("Targeting")]
+    [SerializeField] private Camera targetingCamera;
+    [SerializeField] private RectTransform crosshair;
+    [SerializeField] private float targetingDistance = 100f;
+    [SerializeField] private LayerMask targetingMask = ~0;
+
     private PlayerInput playerInput;
     private PlayerInput.MainActions input;
 
@@ -23,6 +29,10 @@ public class PlayerController : MonoBehaviour
         input = playerInput.Main;
         AssignInputs();
 
+        if (targetingCamera == null) {
+            targetingCamera = Camera.main;
+        }
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -30,7 +40,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         if (input.Attack.IsPressed()) {
-            combatController.Attack();
+            combatController.Attack(BuildAttackContextFromCrosshair());
         }
 
         combatController.TickCombat(Time.deltaTime);
@@ -59,9 +69,41 @@ public class PlayerController : MonoBehaviour
         input.Disable();
     }
 
+    private CombatController.AttackContext BuildAttackContextFromCrosshair()
+    {
+        Ray ray = GetCrosshairRay();
+        Vector3 aimPoint = ray.origin + ray.direction * targetingDistance;
+
+        if (Physics.Raycast(ray, out RaycastHit hit, targetingDistance, targetingMask, QueryTriggerInteraction.Ignore)) {
+            aimPoint = hit.point;
+        }
+
+        return combatController.BuildAttackContextFromAimPoint(aimPoint);
+    }
+
+    private Ray GetCrosshairRay()
+    {
+        Camera cameraToUse = targetingCamera != null ? targetingCamera : Camera.main;
+
+        if (cameraToUse == null) {
+            return new Ray(actor.LookDirection.position, actor.LookDirection.forward);
+        }
+
+        return cameraToUse.ScreenPointToRay(GetCrosshairScreenPosition());
+    }
+
+    private Vector2 GetCrosshairScreenPosition()
+    {
+        if (crosshair != null) {
+            return crosshair.position;
+        }
+
+        return new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+    }
+
     void AssignInputs()
     {
         input.Jump.performed += ctx => movementController.RequestJump();
-        input.Attack.started += ctx => combatController.Attack();
+        input.Attack.started += ctx => combatController.Attack(BuildAttackContextFromCrosshair());
     }
 }
