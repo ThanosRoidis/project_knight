@@ -29,9 +29,13 @@ public class PlayerController : MonoBehaviour
     [Header("Input Handling")]
     [SerializeField] private float attackInputWindow = 0.5f;
     [SerializeField] private float jumpInputWindow = 0.5f;
-    [SerializeField] private float interactDistance = 1f;
     private MoveList moveList;
     private InputBuffer inputBuffer;
+
+    [Header("Interaction")]
+    [SerializeField] private LayerMask interactableMask;
+    [SerializeField] private float interactDistance = 2f;
+    private Interactable targettedInteractable;
 
     private bool inputLocked;
     public bool InputLocked
@@ -79,6 +83,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        UpdateCurrentInteractableTarget();
+
         inputBuffer.Cleanup();
         moveList.ExecuteMoves(inputBuffer);
 
@@ -114,7 +120,8 @@ public class PlayerController : MonoBehaviour
         input.Jump.performed += ctx => RegisterInputEventToBuffer(EventType.JUMP, EventPressType.PRESSED);
         input.Defend.performed += ctx => RegisterInputEventToBuffer(EventType.DEFEND, EventPressType.PRESSED);
         input.Defend.canceled += ctx => RegisterInputEventToBuffer(EventType.DEFEND, EventPressType.RELEASED);
-        input.Interact.performed += ctx => Interact();
+        input.Interact.started += ctx => RegisterInputEventToBuffer(EventType.INTERACT, EventPressType.PRESSED);
+        input.Interact.canceled += ctx => RegisterInputEventToBuffer(EventType.INTERACT, EventPressType.RELEASED);
 
 
         Move attack = new Move("Attack press",
@@ -134,6 +141,28 @@ public class PlayerController : MonoBehaviour
                             movementController.Jump();
                         },
                         priority: 10);
+
+
+
+        // Skills
+        Move interactPressed = new Move("Interact press",
+                new List<InputSequence> { new InputSequence { new InputEvent(EventType.INTERACT, EventPressType.PRESSED) } },
+                inputTimeWindow: 1f, //TODO: Not hardcoded | High input window
+                canPerform: _ => targettedInteractable != null,
+                perform: inputSequence => {
+                    Interact();
+                },
+                priority: 6);
+
+        Move interactReleased = new Move("Interact off",
+                new List<InputSequence> { new InputSequence { new InputEvent(EventType.INTERACT, EventPressType.RELEASED) } },
+                inputTimeWindow: 1, //TODO: Not hardcoded | High input window
+                canPerform: _ => targettedInteractable != null,
+                perform: _ => {
+                    StopInteract();
+                },
+                priority: 6);
+
 
         // Skills
         //Move defendPressed = new Move("Defend on",
@@ -161,6 +190,8 @@ public class PlayerController : MonoBehaviour
 
         moveList.AddMove(attack);
         moveList.AddMove(jump);
+        moveList.AddMove(interactPressed);
+        moveList.AddMove(interactReleased);
     }
 
     private void RegisterInputEventToBuffer(EventType eventType, EventPressType pressType)
@@ -174,7 +205,7 @@ public class PlayerController : MonoBehaviour
         Ray ray = GetCrosshairRay();
         Vector3 aimPoint = ray.origin + ray.direction * targetingDistance;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, targetingDistance, targetingMask, QueryTriggerInteraction.Ignore)) {
+        if (Physics.Raycast(ray, out RaycastHit hit, targetingDistance, targetingMask)) {
             aimPoint = hit.point;
         }
 
@@ -201,8 +232,46 @@ public class PlayerController : MonoBehaviour
         return new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
     }
 
+    private void UpdateCurrentInteractableTarget()
+    {
+        Ray ray = GetCrosshairRay();
+        Interactable nextInteractable = null;
+
+        if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactableMask)) {
+            nextInteractable = hit.transform.GetComponentInParent<Interactable>();
+        }
+
+        if (targettedInteractable == nextInteractable) return;
+
+        if (targettedInteractable != null) {
+            targettedInteractable.SetTargeted(false);
+        }
+
+        targettedInteractable = nextInteractable;
+
+        if (targettedInteractable != null) {
+            targettedInteractable.SetTargeted(true);
+        }
+    }
+
     public void Interact()
     {
+        if (targettedInteractable == null) return;
+        targettedInteractable.StartInteraction();
+    }
 
+    public void StopInteract()
+    {
+        if (targettedInteractable == null) return;
+        targettedInteractable.StopInteraction();
+    }
+
+    void OnDestroy()
+    {
+        if (targettedInteractable != null) {
+            targettedInteractable.SetTargeted(false);
+            targettedInteractable = null;
+        }
     }
 }
+
