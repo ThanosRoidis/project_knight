@@ -1,5 +1,12 @@
+using InputHandling;
+using NUnit.Framework.Interfaces;
+using Shared;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using EventDirection = Shared.Directions.Direction;
+using EventType = InputHandling.EventType;
+using InputEvent = InputHandling.Event;
+using InputSequence = System.Collections.Generic.List<InputHandling.Event>;
 
 public class PlayerController : MonoBehaviour
 {
@@ -13,21 +20,42 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask targetingMask = ~0;
 
     private PlayerInput playerInput;
-    private PlayerInput.MainActions input;
+    private PlayerInput.PlayerActions input;
 
     private Actor actor;
     private MovementController movementController;
     private CombatController combatController;
+
+    [Header("Input Handling")]
+    [SerializeField] private float attackInputWindow = 0.5f;
+    [SerializeField] private float jumpInputWindow = 0.5f;
+    [SerializeField] private float interactDistance = 1f;
+    private MoveList moveList;
+    private InputBuffer inputBuffer;
+
+    private bool inputLocked;
+    public bool InputLocked
+    {
+        get => inputLocked;
+        set {
+            inputLocked = value;
+            if (value) {
+                inputBuffer.ClearAll();
+                //playerMovement.DirectionalInput = Directions.Direction.None;
+                input.Disable();
+            } else {
+                input.Enable();
+            }
+        }
+    }
 
     void Awake()
     {
         actor = GetComponent<Actor>();
         movementController = GetComponent<MovementController>();
         combatController = GetComponent<CombatController>();
+        moveList = new MoveList();
 
-        playerInput = new PlayerInput();
-        input = playerInput.Main;
-        AssignInputs();
 
         if (targetingCamera == null) {
             targetingCamera = Camera.main;
@@ -35,20 +63,31 @@ public class PlayerController : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+
+        playerInput = new PlayerInput();
+        input = playerInput.Player;
+        inputBuffer = new InputBuffer();
+        moveList = new MoveList();
+        //interactables = new HashSet<Interactable>();
+    }
+
+    void Start()
+    {
+        AssignInputs();
     }
 
     void Update()
     {
-        if (input.Attack.IsPressed()) {
-            combatController.Attack(BuildAttackContextFromCrosshair());
-        }
+        inputBuffer.Cleanup();
+        moveList.ExecuteMoves(inputBuffer);
 
         combatController.TickCombat(Time.deltaTime);
     }
 
     void FixedUpdate()
     {
-        movementController.SetMovementInput(input.Movement.ReadValue<Vector2>());
+        movementController.SetMovementInput(input.Move.ReadValue<Vector2>());
         movementController.TickMovement(Time.fixedDeltaTime);
     }
 
@@ -67,6 +106,67 @@ public class PlayerController : MonoBehaviour
     void OnDisable()
     {
         input.Disable();
+    }
+
+    void AssignInputs()
+    {
+        input.Attack.performed += ctx => RegisterInputEventToBuffer(EventType.ATTACK, EventPressType.PRESSED);
+        input.Jump.performed += ctx => RegisterInputEventToBuffer(EventType.JUMP, EventPressType.PRESSED);
+        input.Defend.performed += ctx => RegisterInputEventToBuffer(EventType.DEFEND, EventPressType.PRESSED);
+        input.Defend.canceled += ctx => RegisterInputEventToBuffer(EventType.DEFEND, EventPressType.RELEASED);
+        input.Interact.performed += ctx => Interact();
+
+
+        Move attack = new Move("Attack press",
+                        new List<InputSequence> { new InputSequence { new InputEvent(EventType.ATTACK, EventPressType.PRESSED) } },
+                        inputTimeWindow: attackInputWindow,
+                        canPerform: _ => combatController.CanAttack(),
+                        perform: inputSequence => {
+                            combatController.Attack(BuildAttackContextFromCrosshair());
+                        },
+                        priority: 10);
+
+        Move jump = new Move("Jump press",
+                        new List<InputSequence> { new InputSequence { new InputEvent(EventType.JUMP, EventPressType.PRESSED) } },
+                        inputTimeWindow: jumpInputWindow,
+                        canPerform: _ => movementController.CanJump(),
+                        perform: inputSequence => {
+                            movementController.Jump();
+                        },
+                        priority: 10);
+
+        // Skills
+        //Move defendPressed = new Move("Defend on",
+        //        new List<InputSequence> { new InputSequence { new InputEvent(EventType.DEFEND, EventPressType.HELD) } },
+        //        inputTimeWindow: 1f, //TODO: Not hardcoded | High input window
+        //        canPerform: _ => playerCombat.CanCast(playerSkills[1]),
+        //        perform: inputSequence => {
+        //            playerCombat.Cast(playerSkills[1]);
+        //            defendInputPressed = true;
+        //            defendInputPressTime = inputSequence[0].eventTime;
+        //        },
+        //        priority: 6);
+
+        //Move defendReleased = new Move("Defend off",
+        //        new List<InputSequence> { new InputSequence { new InputEvent(EventType.DEFEND, EventPressType.RELEASED) } },
+        //        inputTimeWindow: 2f, //TODO: Not hardcoded | High input window
+        //        canPerform: _ => { return defendInputPressed; },
+        //        perform: _ => {
+        //            playerSkills[1].OnInputReleased();
+        //            defendInputPressed = false;
+        //        },
+        //        priority: 6,
+        //        viableInput: inputSequence => inputSequence[0].eventTime >= defendInputPressTime); // Make sure that the release was after the press
+
+
+        moveList.AddMove(attack);
+        moveList.AddMove(jump);
+    }
+
+    private void RegisterInputEventToBuffer(EventType eventType, EventPressType pressType)
+    {
+        if (InputLocked) return;
+        inputBuffer.RegisterInputEvent(eventType, pressType, EventDirection.None);
     }
 
     private CombatController.AttackContext BuildAttackContextFromCrosshair()
@@ -101,9 +201,8 @@ public class PlayerController : MonoBehaviour
         return new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
     }
 
-    void AssignInputs()
+    public void Interact()
     {
-        input.Jump.performed += ctx => movementController.RequestJump();
-        input.Attack.started += ctx => combatController.Attack(BuildAttackContextFromCrosshair());
+
     }
 }

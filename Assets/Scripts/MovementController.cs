@@ -22,19 +22,18 @@ public class MovementController : MonoBehaviour
     [SerializeField] private float gravity = -9.8f;
     [SerializeField] private float jumpHeight = 1.2f;
 
-    private CharacterController controller;
+    private CharacterController characterController;
     private Actor actor;
     private CombatController combatController;
     private Vector3 playerVelocity;
     private Vector3 movementInput;
     private Vector3 currentLocalVelocity;
-    private bool jumpRequested;
 
     public bool IsMoving => currentLocalVelocity.sqrMagnitude > 0.001f;
 
     void Awake()
     {
-        controller = GetComponent<CharacterController>();
+        characterController = GetComponent<CharacterController>();
         actor = GetComponent<Actor>();
         combatController = GetComponent<CombatController>();
     }
@@ -46,24 +45,24 @@ public class MovementController : MonoBehaviour
         movementInput.z = input.y;
     }
 
-    public void RequestJump()
+    public bool CanJump()
     {
-        jumpRequested = true;
+        return characterController.isGrounded && !combatController.IsAttacking;
+    }
+
+    public void Jump()
+    {
+        playerVelocity.y = Mathf.Sqrt(jumpHeight * -3.0f * gravity);
+
     }
 
     public void TickMovement(float deltaTime)
     {
-        bool isGrounded = controller.isGrounded;
+        bool isGrounded = characterController.isGrounded;
 
         if (isGrounded && playerVelocity.y < 0f) {
             playerVelocity.y = -2f;
         }
-
-        if (jumpRequested && isGrounded) {
-            playerVelocity.y = Mathf.Sqrt(jumpHeight * -3.0f * gravity);
-        }
-
-        jumpRequested = false;
 
         MovementParams activeMovementParams = GetActiveMovementParams();
         Vector3 targetLocalVelocity = GetTargetLocalVelocity(activeMovementParams);
@@ -73,10 +72,10 @@ public class MovementController : MonoBehaviour
             : activeMovementParams.deceleration;
 
         currentLocalVelocity = Vector3.MoveTowards(currentLocalVelocity, targetLocalVelocity, movementDelta * deltaTime);
-        controller.Move(transform.TransformDirection(currentLocalVelocity) * deltaTime);
+        characterController.Move(transform.TransformDirection(currentLocalVelocity) * deltaTime);
 
         playerVelocity.y += gravity * deltaTime;
-        controller.Move(playerVelocity * deltaTime);
+        characterController.Move(playerVelocity * deltaTime);
 
         actor.UpdateLocomotionAnimation(IsMoving);
     }

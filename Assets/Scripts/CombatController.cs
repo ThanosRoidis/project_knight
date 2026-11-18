@@ -36,6 +36,7 @@ public class CombatController : MonoBehaviour
 
     private Actor actor;
     private AudioSource audioSource;
+    private CharacterController characterController;
 
     private bool attacking = false;
     private bool readyToAttack = true;
@@ -48,6 +49,7 @@ public class CombatController : MonoBehaviour
     {
         actor = GetComponent<Actor>();
         audioSource = GetComponent<AudioSource>();
+        characterController = GetComponent<CharacterController>();
 
         if (attackOrigin == null) {
             attackOrigin = actor.LookDirection;
@@ -82,17 +84,20 @@ public class CombatController : MonoBehaviour
         return new AttackContext(origin, direction.normalized);
     }
 
-    public bool Attack()
+    public void Attack()
     {
         Vector3 origin = attackOrigin != null ? attackOrigin.position : transform.position;
         Vector3 direction = attackDirection != null ? attackDirection.forward : transform.forward;
-        return Attack(new AttackContext(origin, direction));
+        Attack(new AttackContext(origin, direction));
     }
 
-    public bool Attack(AttackContext attackContext)
+    public bool CanAttack()
     {
-        if (!readyToAttack || attacking) return false;
+        return readyToAttack && !attacking && characterController.isGrounded;
+    }
 
+    public void Attack(AttackContext attackContext)
+    {
         if (attackContext.Direction.sqrMagnitude <= 0.0001f) {
             attackContext.Direction = attackDirection != null ? attackDirection.forward : transform.forward;
         }
@@ -118,8 +123,6 @@ public class CombatController : MonoBehaviour
             actor.PlayAttackAnimation(ATTACK2);
             attackCount = 0;
         }
-
-        return true;
     }
 
     void ResetAttack()
