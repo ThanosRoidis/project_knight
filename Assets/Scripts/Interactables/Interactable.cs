@@ -1,6 +1,4 @@
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public abstract class Interactable : MonoBehaviour
 {
@@ -9,25 +7,18 @@ public abstract class Interactable : MonoBehaviour
     [SerializeField] protected float interactDuration;
     [SerializeField] protected bool resetProgressOnStop = true;
 
-    [Header("UI")]
-    [SerializeField] protected GameObject interactUI;
-    [SerializeField] protected TMP_Text interactTextLabel;
-    [SerializeField] protected Image interactionProgressFill;
-
     private bool isTargeted;
     private bool isInteracting;
     private float interactionElapsed;
 
     public string InteractText => interactText;
+    public bool HasInteractDuration => interactDuration > 0f;
     public bool IsTargeted => isTargeted;
     public bool IsInteracting => isInteracting;
     public float ProgressNormalized => interactDuration <= 0f ? 1f : Mathf.Clamp01(interactionElapsed / interactDuration);
 
     protected virtual void Awake()
     {
-        InitializeUI();
-        SetInteractUIVisible(false);
-        SetProgressFill(0f);
     }
 
     protected virtual void Update()
@@ -40,7 +31,7 @@ public abstract class Interactable : MonoBehaviour
         }
 
         interactionElapsed += Time.deltaTime;
-        SetProgressFill(ProgressNormalized);
+        UpdateProgressUI(ProgressNormalized);
 
         if (interactionElapsed >= interactDuration) {
             CompleteInteraction();
@@ -52,8 +43,12 @@ public abstract class Interactable : MonoBehaviour
         isTargeted = false;
         isInteracting = false;
         interactionElapsed = 0f;
-        SetInteractUIVisible(false);
-        SetProgressFill(0f);
+
+        InteractableUI ui = InteractableUI.Instance;
+        if (ui == null) return;
+
+        ui.Hide(this);
+        ui.SetProgress(this, 0f);
     }
 
     public void SetTargeted(bool targeted)
@@ -62,9 +57,15 @@ public abstract class Interactable : MonoBehaviour
 
         if (!isTargeted) {
             StopInteraction();
+            InteractableUI.Instance?.Hide(this);
+            return;
         }
 
-        SetInteractUIVisible(isTargeted);
+        InteractableUI ui = InteractableUI.Instance;
+        if (ui == null) return;
+
+        ui.Show(this);
+        ui.SetProgress(this, ProgressNormalized);
     }
 
     public void Interact()
@@ -91,42 +92,26 @@ public abstract class Interactable : MonoBehaviour
 
         if (resetProgressOnStop) {
             interactionElapsed = 0f;
-            SetProgressFill(0f);
+            UpdateProgressUI(0f);
         }
     }
 
     public abstract void OnInteract();
 
-    private void InitializeUI()
-    {
-        if (interactTextLabel != null) {
-            interactTextLabel.text = interactText;
-        }
-    }
-
     private void CompleteInteraction()
     {
         isInteracting = false;
         interactionElapsed = 0f;
-        SetProgressFill(1f);
+        UpdateProgressUI(1f);
         OnInteract();
 
         if (isTargeted) {
-            SetProgressFill(0f);
+            UpdateProgressUI(0f);
         }
     }
 
-    private void SetInteractUIVisible(bool visible)
+    private void UpdateProgressUI(float normalized)
     {
-        if (interactUI != null) {
-            interactUI.SetActive(visible);
-        }
-    }
-
-    private void SetProgressFill(float normalized)
-    {
-        if (interactionProgressFill != null) {
-            interactionProgressFill.fillAmount = Mathf.Clamp01(normalized);
-        }
+        InteractableUI.Instance?.SetProgress(this, normalized);
     }
 }
