@@ -21,6 +21,7 @@ namespace Shared
         protected override void Awake()
         {
             base.Awake();
+            windows = new List<Window>() { };
 
             foreach (var window in windows) {
                 window.InitializeWindow(_inGameplayScene);

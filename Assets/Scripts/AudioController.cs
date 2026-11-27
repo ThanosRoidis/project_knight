@@ -54,10 +54,10 @@ namespace Shared
 
         protected void Start()
         {
-            if (GameOptions.Instance != null) {
-                SetVolume(VolumeType.MASTER, GameOptions.Instance.masterVolume);
-                SetVolume(VolumeType.MUSIC, GameOptions.Instance.musicVolume);
-                SetVolume(VolumeType.SFX, GameOptions.Instance.sfxVolume);
+            if (BaseGameOptions.Instance != null) {
+                SetVolume(VolumeType.MASTER, BaseGameOptions.Instance.masterVolume);
+                SetVolume(VolumeType.MUSIC, BaseGameOptions.Instance.musicVolume);
+                SetVolume(VolumeType.SFX, BaseGameOptions.Instance.sfxVolume);
             }
         }
 
@@ -210,13 +210,13 @@ namespace Shared
 
             switch (volType) {
                 case VolumeType.MASTER:
-                    GameOptions.Instance.masterVolume = value;
+                    BaseGameOptions.Instance.masterVolume = value;
                     break;
                 case VolumeType.MUSIC:
-                    GameOptions.Instance.musicVolume = value;
+                    BaseGameOptions.Instance.musicVolume = value;
                     break;
                 case VolumeType.SFX:
-                    GameOptions.Instance.sfxVolume = value;
+                    BaseGameOptions.Instance.sfxVolume = value;
                     break;
             }
         }
@@ -226,13 +226,13 @@ namespace Shared
             float volume = 0;
             switch (volType) {
                 case VolumeType.MASTER:
-                    volume = GameOptions.Instance.masterVolume;
+                    volume = BaseGameOptions.Instance.masterVolume;
                     break;
                 case VolumeType.MUSIC:
-                    volume = GameOptions.Instance.musicVolume;
+                    volume = BaseGameOptions.Instance.musicVolume;
                     break;
                 case VolumeType.SFX:
-                    volume = GameOptions.Instance.sfxVolume;
+                    volume = BaseGameOptions.Instance.sfxVolume;
                     break;
             }
             return volume;

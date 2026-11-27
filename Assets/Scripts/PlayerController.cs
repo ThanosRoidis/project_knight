@@ -1,5 +1,4 @@
 using InputHandling;
-using NUnit.Framework.Interfaces;
 using Shared;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,7 +7,7 @@ using EventType = InputHandling.EventType;
 using InputEvent = InputHandling.Event;
 using InputSequence = System.Collections.Generic.List<InputHandling.Event>;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : Shared.Singleton<PlayerController>
 {
     [Header("Look")]
     [SerializeField] private float lookSensitivity = 15f;
@@ -36,6 +35,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask interactableMask;
     [SerializeField] private float interactDistance = 2f;
     private Interactable targettedInteractable;
+    private Actor targettedEnemy;
+    private float attackDistance;
+
+    public bool HasCurrentTarget => targettedInteractable != null || targettedEnemy != null;
 
     private bool inputLocked;
     public bool InputLocked
@@ -53,13 +56,14 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         actor = GetComponent<Actor>();
         movementController = GetComponent<MovementController>();
         combatController = GetComponent<CombatController>();
         moveList = new MoveList();
-
+        attackDistance = combatController.AttackDistance;
 
         if (targetingCamera == null) {
             targetingCamera = Camera.main;
@@ -84,6 +88,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         UpdateCurrentInteractableTarget();
+        UpdateCurrentEnemyTarget();
 
         inputBuffer.Cleanup();
         moveList.ExecuteMoves(inputBuffer);
@@ -95,6 +100,9 @@ public class PlayerController : MonoBehaviour
     {
         movementController.SetMovementInput(input.Move.ReadValue<Vector2>());
         movementController.TickMovement(Time.fixedDeltaTime);
+        if (movementController.IsMoving) {
+            StopInteract();
+        }
     }
 
     void LateUpdate()
@@ -254,6 +262,38 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void UpdateCurrentEnemyTarget()
+    {
+        Ray ray = GetCrosshairRay();
+        Actor nextEnemy = null;
+
+        if (Physics.Raycast(ray, out RaycastHit hit, attackDistance, targetingMask)) {
+            Actor hitActor = hit.transform.GetComponentInParent<Actor>();
+
+            if (hitActor != null && hitActor != actor && hitActor.TryGetComponent(out AIController _)) {
+                nextEnemy = hitActor;
+            }
+        }
+
+        if (targettedEnemy == nextEnemy) {
+            if (targettedEnemy != null) {
+                EnemyUI.Instance?.Show(targettedEnemy);
+            }
+
+            return;
+        }
+
+        if (targettedEnemy != null) {
+            EnemyUI.Instance?.Hide(targettedEnemy);
+        }
+
+        targettedEnemy = nextEnemy;
+
+        if (targettedEnemy != null) {
+            EnemyUI.Instance?.Show(targettedEnemy);
+        }
+    }
+
     public void Interact()
     {
         if (targettedInteractable == null) return;
@@ -271,6 +311,11 @@ public class PlayerController : MonoBehaviour
         if (targettedInteractable != null) {
             targettedInteractable.SetTargeted(false);
             targettedInteractable = null;
+        }
+
+        if (targettedEnemy != null) {
+            EnemyUI.Instance?.Hide(targettedEnemy);
+            targettedEnemy = null;
         }
     }
 }

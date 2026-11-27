@@ -14,7 +14,6 @@ namespace Shared
 
         [SerializeField] private string _playScene = "Play";
         [SerializeField] private string _mainMenuScene = "Main Menu Scene";
-        [SerializeField] private string _multiplayerScene = "Multiplayer Scene";
 
         // Start is called before the first frame update
         void Start()
@@ -33,11 +32,6 @@ namespace Shared
         public void LoadPlayScene()
         {
             LoadScene(_playScene);
-        }
-
-        public void LoadMultiplayerScene()
-        {
-            LoadScene(_multiplayerScene);
         }
 
 

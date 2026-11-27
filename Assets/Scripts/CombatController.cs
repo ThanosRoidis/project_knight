@@ -31,6 +31,8 @@ public class CombatController : MonoBehaviour
 
     public bool IsAttacking => attacking;
 
+    public float AttackDistance { get => attackDistance;}
+
     private const string ATTACK1 = "ATTACK_1";
     private const string ATTACK2 = "ATTACK_2";
 

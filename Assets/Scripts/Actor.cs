@@ -1,9 +1,12 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(Animator))]
 public class Actor : MonoBehaviour
 {
+    [SerializeField] private string actorName;
+
     [Header("Health")]
     [SerializeField] private int maxHealth;
     [SerializeField] private AudioClip hitSound;
@@ -33,6 +36,11 @@ public class Actor : MonoBehaviour
     private float xRotation;
     private bool attacking;
 
+    public event Action<Actor> HealthChanged;
+
+    public string ActorName => actorName;
+    public int MaxHealth => maxHealth;
+    public int CurrentHealth => currentHealth;
     public Transform LookDirection => lookDirection != null ? lookDirection : transform;
 
     public float Height
@@ -129,7 +137,8 @@ public class Actor : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        currentHealth -= amount;
+        currentHealth = Mathf.Max(0, currentHealth - amount);
+        HealthChanged?.Invoke(this);
 
         if (currentHealth <= 0) { Die(); }
     }

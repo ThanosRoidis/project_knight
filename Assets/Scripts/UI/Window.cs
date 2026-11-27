@@ -65,13 +65,13 @@ namespace Shared
 
             if (!_opened) {
                 if (_inGameplayScene) {
-                    if (GameController.Instance.GameStarted) {
+                    if (BaseGameController.Instance.GameStarted) {
                         if (freeze) {
-                            GameController.Instance.PauseTime();
+                            BaseGameController.Instance.PauseTime();
                             UIController.Instance.TransparencyImage.gameObject.SetActive(true);
                         }
                         if (lockControl) {
-                            GameController.Instance.LockPlayerControl();
+                            BaseGameController.Instance.LockPlayerControl();
                         }
                     }
                 }
@@ -114,10 +114,10 @@ namespace Shared
                 if (_inGameplayScene) {
                     if (freeze) {
                         UIController.Instance.TransparencyImage.gameObject.SetActive(false);
-                        GameController.Instance.ContinueTime();
+                        BaseGameController.Instance.ContinueTime();
                     }
                     if (lockControl) {
-                        GameController.Instance.UnlockPlayerControl();
+                        BaseGameController.Instance.UnlockPlayerControl();
                     }
                 }
 
