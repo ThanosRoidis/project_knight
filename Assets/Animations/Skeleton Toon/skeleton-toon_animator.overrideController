@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: skeleton-toon_animator
+  m_Controller: {fileID: 9100000, guid: d11a58ea823d8ad44b958c166403ddcb, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: 81ce93cf8336bcb48a0df0930889dbec, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 3040a0cf02d17f341a7e266ca6d5f002, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: 6d4a859f8d16a3f4c86ed4e9d3145a7a, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 3040a0cf02d17f341a7e266ca6d5f002, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: d2319fbb489e14b4280d94356b0890d4, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 1fc39c37ef49990448d906d00f43bac2, type: 3}
+  - m_OriginalClip: {fileID: 7400000, guid: 7beb8e0a5d4c79c49ad4ae4c663cf00d, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: df4b19dbdcfed3c459acddcb64beaf6b, type: 3}
